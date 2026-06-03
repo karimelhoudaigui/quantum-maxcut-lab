@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quantum MaxCut Lab</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="mark"><span>Q</span></div>
+        <div>
+          <h1>Quantum MaxCut</h1>
+          <p>Rydberg proxy console</p>
+        </div>
+      </div>
+
+      <div class="side-label">Experiments</div>
+      <nav class="experiments" id="experiments"></nav>
+
+      <section class="export-card">
+        <div>
+          <p>Figure output</p>
+          <h2>Article PNG</h2>
+        </div>
+        <button id="generatePng" class="primary">Générer PNG</button>
+        <div id="outputList" class="outputs"></div>
+      </section>
+    </aside>
+
+    <main class="workspace">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Neutral atom analytics</p>
+          <h2 id="title">Chargement...</h2>
+          <p id="subtitle" class="subtitle">Exploration locale des expériences Quantum MaxCut.</p>
+        </div>
+        <div class="hero-status">
+          <span id="statusBadge" class="badge">Initialisation</span>
+          <div class="pulse-readout">
+            <span>XY proxy</span>
+            <strong id="readoutValue">--</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="metrics" id="metrics"></section>
+
+      <section class="plot-grid">
+        <article class="panel plot-panel wide">
+          <div class="panel-head">
+            <div>
+              <p class="section-kicker">Primary signal</p>
+              <h3 id="primaryPlotTitle">Plot principal</h3>
+            </div>
+            <span id="primaryPlotHint"></span>
+          </div>
+          <div id="primaryLegend" class="legend"></div>
+          <div id="primaryPlot" class="plot"></div>
+        </article>
+
+        <article class="panel plot-panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-kicker">Diagnostic</p>
+              <h3 id="secondaryPlotTitle">Diagnostic</h3>
+            </div>
+            <span id="secondaryPlotHint"></span>
+          </div>
+          <div id="secondaryPlot" class="plot small"></div>
+        </article>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="panel-head">
+          <div>
+            <p class="section-kicker">Raw result matrix</p>
+            <h3>Données</h3>
+          </div>
+          <span id="tableHint"></span>
+        </div>
+        <div class="table-wrap">
+          <table id="dataTable"></table>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

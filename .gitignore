@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Frontend dependencies
+node_modules/
+app/node_modules/
+
+# Generated research outputs
+results/
+results/json/
+results/tables/
+results/figures/
+benchmark_full.json
+benchmark_summary.csv
+hybrid_graph_study_*.json
+pulser_*_scan.json
+pulser_*_grid_search.json
+pulser_*_grid_search_best.json
+pulser_*_experiment.json
+pulser_scan_results*.json
+figure*.png
+*.csv
+*.pkl
+
+# Optional external experiments
+pulser-diff/
+
+# Test and coverage artefacts
+.pytest_cache/
+.coverage
+htmlcov/
