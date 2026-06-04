@@ -31,6 +31,25 @@ export interface GraphGenerateRequest {
   optimize_geometry: boolean;
 }
 
+export interface AnnealingConfig {
+  omega_peak_mhz: number;
+  rise_duration: number;
+  hold_duration: number;
+  fall_duration: number;
+  delta_start_pi: number;
+  delta_hold_pi: number;
+  delta_end_pi: number;
+  sampling_rate: number;
+  n_roundings: number;
+}
+
+export interface PipelineRunRequest {
+  graph: GraphResponse;
+  annealing: AnnealingConfig;
+  n_roundings: number;
+  seed: number;
+}
+
 export type StepStatus = "pending" | "running" | "completed" | "failed";
 export type JobStatus = "queued" | "running" | "completed" | "failed";
 

@@ -36,3 +36,42 @@ select,
 input {
   font: inherit;
 }
+
+.modern-slider {
+  height: 0.5rem;
+  cursor: pointer;
+  appearance: none;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      90deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--primary)) var(--slider-progress),
+      hsl(var(--border)) var(--slider-progress),
+      hsl(var(--border)) 100%
+    );
+  outline: none;
+}
+
+.modern-slider:disabled {
+  cursor: not-allowed;
+}
+
+.modern-slider::-webkit-slider-thumb {
+  height: 1rem;
+  width: 1rem;
+  appearance: none;
+  border: 2px solid hsl(var(--background));
+  border-radius: 999px;
+  background: hsl(var(--foreground));
+  box-shadow: 0 0 0 1px hsl(var(--border)), 0 6px 18px hsl(0 0% 0% / 0.24);
+}
+
+.modern-slider::-moz-range-thumb {
+  height: 1rem;
+  width: 1rem;
+  border: 2px solid hsl(var(--background));
+  border-radius: 999px;
+  background: hsl(var(--foreground));
+  box-shadow: 0 0 0 1px hsl(var(--border)), 0 6px 18px hsl(0 0% 0% / 0.24);
+}

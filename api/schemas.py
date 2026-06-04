@@ -45,8 +45,21 @@ class GraphResponse(BaseModel):
     descriptors: Dict[str, Union[float, int, str]]
 
 
+class AnnealingConfig(BaseModel):
+    omega_peak_mhz: float = Field(default=2.0, ge=0.1, le=10.0)
+    rise_duration: int = Field(default=1000, ge=0, le=100000)
+    hold_duration: int = Field(default=1000, ge=0, le=100000)
+    fall_duration: int = Field(default=26000, ge=0, le=100000)
+    delta_start_pi: float = Field(default=1.0, ge=-4.0, le=4.0)
+    delta_hold_pi: float = Field(default=-0.5, ge=-4.0, le=4.0)
+    delta_end_pi: float = Field(default=-1.0, ge=-4.0, le=4.0)
+    sampling_rate: float = Field(default=0.05, ge=0.001, le=1.0)
+    n_roundings: int = Field(default=32, ge=1, le=256)
+
+
 class PipelineRunRequest(BaseModel):
     graph: GraphResponse
+    annealing: AnnealingConfig = Field(default_factory=AnnealingConfig)
     n_roundings: int = Field(default=32, ge=1, le=256)
     seed: int = 1234
 

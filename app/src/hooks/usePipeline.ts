@@ -17,6 +17,7 @@ export function useGraphGeneration() {
 export function usePipelineRunner() {
   const graph = usePipelineStore((state) => state.graph);
   const job = usePipelineStore((state) => state.job);
+  const annealing = usePipelineStore((state) => state.annealing);
   const setJob = usePipelineStore((state) => state.setJob);
 
   const run = useMutation({
@@ -24,7 +25,7 @@ export function usePipelineRunner() {
       if (!graph) {
         throw new Error("Generate a graph before running the pipeline.");
       }
-      return runPipeline(graph);
+      return runPipeline(graph, annealing);
     },
     onSuccess: setJob,
   });

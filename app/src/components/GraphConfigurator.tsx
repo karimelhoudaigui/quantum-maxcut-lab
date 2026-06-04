@@ -1,4 +1,5 @@
-import { Network, Play, RefreshCw } from "lucide-react";
+import { Network, Play, RefreshCw, RotateCcw, SlidersHorizontal, Waves } from "lucide-react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { useGraphGeneration } from "../hooks/usePipeline";
 import { usePipelineStore } from "../stores/pipelineStore";
@@ -8,11 +9,13 @@ const families: GraphFamily[] = ["path", "cycle", "star", "complete", "random"];
 
 export function GraphConfigurator() {
   const config = usePipelineStore((state) => state.config);
+  const annealing = usePipelineStore((state) => state.annealing);
   const setConfig = usePipelineStore((state) => state.setConfig);
+  const setAnnealing = usePipelineStore((state) => state.setAnnealing);
   const generation = useGraphGeneration();
 
   return (
-    <aside className="flex h-full flex-col border-r border-border bg-muted/30 p-5">
+    <aside className="flex h-screen flex-col overflow-y-auto border-r border-border bg-muted/30 p-5">
       <div className="mb-6 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-background">
           <Network size={20} />
@@ -83,6 +86,126 @@ export function GraphConfigurator() {
           />
         </label>
 
+        <div className="rounded-md border border-border bg-background/55 p-3">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal size={17} className="text-primary" />
+              <div>
+                <h2 className="text-sm font-semibold">Annealing controls</h2>
+                <p className="text-xs text-foreground/50">Dynamic pulse schedule</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setAnnealing({
+                  omega_peak_mhz: 2,
+                  rise_duration: 1000,
+                  hold_duration: 1000,
+                  fall_duration: 26000,
+                  delta_start_pi: 1,
+                  delta_hold_pi: -0.5,
+                  delta_end_pi: -1,
+                  sampling_rate: 0.05,
+                  n_roundings: 32,
+                })
+              }
+              className="rounded-md border border-border p-2 text-foreground/65 transition hover:bg-muted hover:text-foreground"
+              title="Reset annealing controls"
+            >
+              <RotateCcw size={15} />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <Slider
+              label="Omega peak"
+              value={annealing.omega_peak_mhz}
+              min={0.5}
+              max={5}
+              step={0.1}
+              unit="MHz"
+              onChange={(omega_peak_mhz) => setAnnealing({ omega_peak_mhz })}
+            />
+            <Slider
+              label="Rise"
+              value={annealing.rise_duration}
+              min={100}
+              max={5000}
+              step={100}
+              unit="ns"
+              onChange={(rise_duration) => setAnnealing({ rise_duration })}
+            />
+            <Slider
+              label="Hold"
+              value={annealing.hold_duration}
+              min={0}
+              max={6000}
+              step={100}
+              unit="ns"
+              onChange={(hold_duration) => setAnnealing({ hold_duration })}
+            />
+            <Slider
+              label="Fall"
+              value={annealing.fall_duration}
+              min={1000}
+              max={40000}
+              step={500}
+              unit="ns"
+              onChange={(fall_duration) => setAnnealing({ fall_duration })}
+            />
+            <Slider
+              label="Delta start"
+              value={annealing.delta_start_pi}
+              min={-2}
+              max={2}
+              step={0.05}
+              unit="pi"
+              onChange={(delta_start_pi) => setAnnealing({ delta_start_pi })}
+            />
+            <Slider
+              label="Delta hold"
+              value={annealing.delta_hold_pi}
+              min={-2}
+              max={2}
+              step={0.05}
+              unit="pi"
+              onChange={(delta_hold_pi) => setAnnealing({ delta_hold_pi })}
+            />
+            <Slider
+              label="Delta end"
+              value={annealing.delta_end_pi}
+              min={-2}
+              max={2}
+              step={0.05}
+              unit="pi"
+              onChange={(delta_end_pi) => setAnnealing({ delta_end_pi })}
+            />
+            <Slider
+              label="Sampling"
+              value={annealing.sampling_rate}
+              min={0.01}
+              max={0.2}
+              step={0.01}
+              onChange={(sampling_rate) => setAnnealing({ sampling_rate })}
+            />
+            <Slider
+              label="Roundings"
+              value={annealing.n_roundings}
+              min={8}
+              max={128}
+              step={8}
+              onChange={(n_roundings) => setAnnealing({ n_roundings })}
+            />
+          </div>
+
+          <div className="mt-4 grid grid-cols-3 gap-2 rounded-md border border-border bg-muted/35 p-2">
+            <MiniMetric label="Total" value={`${formatNumber(annealing.rise_duration + annealing.hold_duration + annealing.fall_duration, 0)} ns`} />
+            <MiniMetric label="Sweep" value={`${formatNumber(annealing.delta_start_pi, 2)}→${formatNumber(annealing.delta_end_pi, 2)} pi`} />
+            <MiniMetric label="Mode" value={<Waves size={15} />} />
+          </div>
+        </div>
+
         <button
           type="button"
           onClick={() => generation.mutate()}
@@ -109,16 +232,22 @@ interface SliderProps {
   min: number;
   max: number;
   step: number;
+  unit?: string;
   disabled?: boolean;
   onChange: (value: number) => void;
 }
 
-function Slider({ label, value, min, max, step, disabled = false, onChange }: SliderProps) {
+function Slider({ label, value, min, max, step, unit, disabled = false, onChange }: SliderProps) {
+  const progress = ((value - min) / (max - min)) * 100;
+
   return (
     <label className={disabled ? "block opacity-45" : "block"}>
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium text-foreground/80">{label}</span>
-        <span className="font-mono text-foreground/60">{value.toFixed(step < 1 ? 2 : 0)}</span>
+        <span className="font-mono text-foreground/60">
+          {formatNumber(value, step < 1 ? 2 : 0)}
+          {unit ? <span className="ml-1 text-foreground/40">{unit}</span> : null}
+        </span>
       </div>
       <input
         type="range"
@@ -128,8 +257,22 @@ function Slider({ label, value, min, max, step, disabled = false, onChange }: Sl
         value={value}
         disabled={disabled}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="mt-3 w-full accent-primary"
+        className="modern-slider mt-3 w-full"
+        style={{ "--slider-progress": `${progress}%` } as CSSProperties}
       />
     </label>
   );
+}
+
+function MiniMetric({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[10px] font-medium uppercase text-foreground/45">{label}</p>
+      <div className="mt-1 flex min-h-5 items-center truncate font-mono text-xs text-primary">{value}</div>
+    </div>
+  );
+}
+
+function formatNumber(value: number, digits: number) {
+  return value.toFixed(digits);
 }

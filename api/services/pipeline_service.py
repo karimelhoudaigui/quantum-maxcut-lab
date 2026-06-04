@@ -11,6 +11,7 @@ from typing import Iterable
 import numpy as np
 
 from api.schemas import (
+    AnnealingConfig,
     Edge,
     FamilyResultRow,
     GraphFamily,
@@ -42,6 +43,20 @@ DEFAULT_PULSE = {
     "sampling_rate": 0.05,
     "scale": 15.5,
 }
+
+
+def _pulse_from_annealing(config: AnnealingConfig) -> dict[str, float | int]:
+    return {
+        **DEFAULT_PULSE,
+        "omega_peak": 2 * np.pi * config.omega_peak_mhz,
+        "rise_duration": int(config.rise_duration),
+        "hold_duration": int(config.hold_duration),
+        "fall_duration": int(config.fall_duration),
+        "delta_start": np.pi * config.delta_start_pi,
+        "delta_hold": np.pi * config.delta_hold_pi,
+        "delta_end": np.pi * config.delta_end_pi,
+        "sampling_rate": float(config.sampling_rate),
+    }
 
 
 STEP_TEMPLATE = [
@@ -196,6 +211,8 @@ def _run_pipeline_job(job_id: str, request: PipelineRunRequest) -> None:
     from quantum_hybrid.hybrid_graph_study import evaluate_fixed_hybrid_sequence_on_graph
 
     edges = _edge_tuples(request.graph.edges)
+    pulse = _pulse_from_annealing(request.annealing)
+    n_roundings = request.annealing.n_roundings or request.n_roundings
     try:
         registry.update(job_id, status="running", progress=5)
         registry.update_step(job_id, "geometry", "running", progress=15)
@@ -204,11 +221,11 @@ def _run_pipeline_job(job_id: str, request: PipelineRunRequest) -> None:
         result = evaluate_fixed_hybrid_sequence_on_graph(
             n=request.graph.n_nodes,
             target_edges=edges,
-            n_roundings=request.n_roundings,
+            n_roundings=n_roundings,
             seed=request.seed,
             max_iter=500,
             tol=1e-5,
-            **DEFAULT_PULSE,
+            **pulse,
         )
 
         registry.update_step(job_id, "geometry", "completed", result.get("mapping_error"), 35)
@@ -221,6 +238,7 @@ def _run_pipeline_job(job_id: str, request: PipelineRunRequest) -> None:
             **result,
             "gain_hybrid_vs_pulser": gain,
             "cut_value": float(result["E_hybrid_in_qmc"]),
+            "annealing": request.annealing.model_dump(),
         }
         registry.update(job_id, status="completed", progress=100, result=result_payload)
     except Exception as exc:
