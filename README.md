@@ -6,6 +6,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-API-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-Console-61DAFB?style=for-the-badge&logo=react&logoColor=111827)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-UI-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Three.js](https://img.shields.io/badge/Three.js-3D_Graph-000000?style=for-the-badge&logo=threedotjs&logoColor=white)](https://threejs.org/)
 [![Vite](https://img.shields.io/badge/Vite-Frontend-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
@@ -25,13 +26,15 @@ The application is designed for small neutral-atom MaxCut experiments where exac
 2. Tune graph parameters: number of nodes, density and edge-weight range.
 3. Generate a weighted graph and optional optimized atom coordinates.
 4. Adjust annealing parameters with modern sliders.
-5. Run the full hybrid pipeline.
-6. Watch progress across geometry embedding, Pulser proxy, SDP and rounding.
-7. Inspect live metrics: mapping error, proxy ratio, hybrid ratio, cut value and hybrid gain.
+5. Move the graph in the 3D canvas: drag to rotate, scroll to zoom, pan to reposition.
+6. Run the full hybrid pipeline.
+7. Watch progress across geometry embedding, Pulser proxy, SDP and rounding.
+8. Inspect live metrics: mapping error, proxy ratio, hybrid ratio, cut value and hybrid gain.
 
 ## Software Features
 
 - **Interactive graph generation** with weighted graph families.
+- **3D graph canvas** powered by Three.js, with orbit, zoom and pan controls.
 - **Atom geometry optimization** to map graph weights into distance-dependent neutral-atom couplings.
 - **Dynamic annealing control** through sliders for pulse amplitude, durations, detuning sweep and sampling.
 - **Pulser-style quantum proxy evaluation** for Rydberg-inspired XY dynamics.
@@ -70,6 +73,21 @@ delta_end = pi * delta_end_pi
 
 The final pipeline result stores the annealing configuration used for the run, making experiments reproducible from the UI state.
 
+## 3D Graph Canvas
+
+The graph view is an interactive Three.js scene. Generated graph nodes are rendered as glowing 3D spheres, weighted edges are rendered as luminous links and labels stay attached to the nodes.
+
+Controls:
+
+| Action | Interaction |
+| --- | --- |
+| Rotate/orbit | Drag with the mouse or trackpad |
+| Zoom | Mouse wheel or trackpad pinch/scroll |
+| Pan | Right-click drag, middle-click drag or two-finger trackpad pan |
+| Reset by regeneration | Generate another graph to reframe the camera around the new instance |
+
+The 3D projection keeps the optimized atom layout as the base geometry and adds depth from graph structure, so high-connectivity nodes become easier to inspect. This makes the graph easier to explore during demos and while comparing geometry embedding quality against downstream Pulser/hybrid metrics.
+
 ## Architecture
 
 ```text
@@ -91,7 +109,7 @@ The final pipeline result stores the annealing configuration used for the run, m
 │   │   ├── stores/                # Zustand pipeline state
 │   │   ├── types.ts               # TypeScript domain types
 │   │   └── styles.css             # Tailwind and modern slider styling
-│   ├── package.json
+│   ├── package.json               # React, Vite, Three.js and dashboard dependencies
 │   └── vite.config.ts             # Dev proxy for /api
 │
 ├── quantum_hybrid/                # SDP and hybrid rounding core
