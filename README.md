@@ -1,10 +1,11 @@
 # Quantum MaxCut Lab
 
-> A modern research console for neutral-atom MaxCut experiments, from graph generation to Rydberg proxy simulation, SDP relaxation and hybrid rounding.
+> Modern software console for neutral-atom MaxCut experiments: graph generation, geometry embedding, annealing control, Pulser-style proxy evaluation, SDP relaxation, hybrid rounding and live metrics.
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-API-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-Console-61DAFB?style=for-the-badge&logo=react&logoColor=111827)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-UI-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-Frontend-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
@@ -12,90 +13,147 @@
 
 ## Overview
 
-Quantum MaxCut Lab is a production-style software interface built on top of the research project [`karimelhoudaigui/quantum-maxcut`](https://github.com/karimelhoudaigui/quantum-maxcut).
+Quantum MaxCut Lab is the software application layer built from the research project [`karimelhoudaigui/quantum-maxcut`](https://github.com/karimelhoudaigui/quantum-maxcut).
 
-The goal is to make the complete quantum optimization workflow visible, interactive and reproducible:
+The original project focuses on the mathematical and experimental pipeline. This repository presents the same work as a modern, usable software console: a FastAPI backend, a React/TypeScript frontend, live pipeline jobs, graph visualization, dynamic annealing sliders and production-style metrics.
 
-- generate weighted graph instances;
-- optimize a neutral-atom geometry for the graph;
-- evaluate a Rydberg XY proxy with Pulser-inspired simulation tools;
-- reconstruct a hybrid classical/quantum relaxation with SDP;
-- run rounding and compare Pulser proxy quality against hybrid recovery;
-- inspect live metrics through a modern React console.
+The application is designed for small neutral-atom MaxCut experiments where exact simulation, optimization and SDP are still tractable. It gives researchers and reviewers a single interface to move from a graph instance to a full Pulser → SDP → rounding comparison.
 
-## What The Software Does
+## Core Workflow
 
-Quantum MaxCut Lab studies the MaxCut problem through a neutral-atom mapping. A weighted graph is transformed into atom positions, where distance-dependent couplings approximate graph edge weights. The software then compares several layers of the pipeline:
+1. Select a graph family: `path`, `cycle`, `star`, `complete` or `random`.
+2. Tune graph parameters: number of nodes, density and edge-weight range.
+3. Generate a weighted graph and optional optimized atom coordinates.
+4. Adjust annealing parameters with modern sliders.
+5. Run the full hybrid pipeline.
+6. Watch progress across geometry embedding, Pulser proxy, SDP and rounding.
+7. Inspect live metrics: mapping error, proxy ratio, hybrid ratio, cut value and hybrid gain.
 
-- **Geometry embedding**: maps graph weights into atom coordinates and reports the mapping error.
-- **Rydberg proxy**: evaluates a proxy Hamiltonian based on neutral-atom interactions.
-- **Pulser pipeline**: prepares and evaluates pulse-sequence inspired quantum states.
-- **SDP relaxation**: reconstructs a pseudo-moment matrix from proxy correlators.
-- **Hybrid rounding**: produces rounded candidate cuts and compares them to proxy-only behavior.
-- **Dashboard analytics**: exposes ratio, cut value, mapping error and hybrid gain in a console UI.
+## Software Features
 
-The application is designed for small research instances where exact methods, simulation, SDP and visualization can be combined in the same loop.
+- **Interactive graph generation** with weighted graph families.
+- **Atom geometry optimization** to map graph weights into distance-dependent neutral-atom couplings.
+- **Dynamic annealing control** through sliders for pulse amplitude, durations, detuning sweep and sampling.
+- **Pulser-style quantum proxy evaluation** for Rydberg-inspired XY dynamics.
+- **SDP reconstruction** using proxy correlators.
+- **Hybrid rounding** to compare rounded MaxCut candidates against proxy behavior.
+- **Live pipeline status** with queued, running, completed and failed states.
+- **Modern React console** with a dense research-dashboard layout.
+- **FastAPI backend** with typed request/response schemas.
+- **Docker Compose support** for one-command launch.
+- **Python-only dashboard fallback** when Node.js or Docker are not available.
 
-## Product Surface
+## Annealing Controls
 
-The repository contains two user-facing interfaces:
+The left control panel contains an `Annealing controls` block. These sliders are part of the same software console and are sent to the backend when the user clicks `Run`.
 
-- **Modern Console**: React + TypeScript + Vite frontend in `app/`, connected to a FastAPI backend in `api/`.
-- **Legacy Research Dashboard**: lightweight Python HTTP dashboard in `quantum_frontend.py`, useful when Node or Docker are not available.
+| Control | Meaning | Backend field |
+| --- | --- | --- |
+| `Omega peak` | Peak Rabi amplitude in MHz before conversion to angular units | `omega_peak_mhz` |
+| `Rise` | Ramp-up duration | `rise_duration` |
+| `Hold` | Plateau duration | `hold_duration` |
+| `Fall` | Ramp-down duration | `fall_duration` |
+| `Delta start` | Initial detuning in units of pi | `delta_start_pi` |
+| `Delta hold` | Hold detuning in units of pi | `delta_hold_pi` |
+| `Delta end` | Final detuning in units of pi | `delta_end_pi` |
+| `Sampling` | Pulse sampling rate used by the simulation pipeline | `sampling_rate` |
+| `Roundings` | Number of randomized hybrid rounding attempts | `n_roundings` |
 
-The modern console is the main software surface. It provides graph controls, pipeline execution, live progress cards, graph visualization and metric panels.
+The backend converts slider values into the pulse dictionary consumed by the Pulser/hybrid experiment:
+
+```python
+omega_peak = 2 * pi * omega_peak_mhz
+delta_start = pi * delta_start_pi
+delta_hold = pi * delta_hold_pi
+delta_end = pi * delta_end_pi
+```
+
+The final pipeline result stores the annealing configuration used for the run, making experiments reproducible from the UI state.
 
 ## Architecture
 
 ```text
 .
-├── api/                         # FastAPI backend and pipeline endpoints
-├── app/                         # React 18 + TypeScript + Vite console
-├── frontend/                    # Lightweight static dashboard assets
-├── quantum_hybrid/              # SDP relaxation and hybrid rounding
-├── quantum_pulser/              # Pulser-style sequence simulation and evaluation
-├── quantum_pulser_all/          # Legacy Pulser experiment helpers
-├── scripts/                     # Reproducible experiment launchers
-├── assets/software-preview.png  # README preview image
-├── docker-compose.yml           # Full API + frontend stack
-├── quantum_main.py              # Research runner
-├── quantum_utils.py             # Hamiltonians, Pauli operators and exact utilities
-└── requirements.txt             # Python dependencies
+├── api/
+│   ├── main.py                    # FastAPI app, CORS, routers
+│   ├── schemas.py                 # Typed request/response models
+│   ├── routers/
+│   │   ├── graph.py               # Graph generation endpoint
+│   │   └── pipeline.py            # Pipeline job endpoints
+│   └── services/
+│       └── pipeline_service.py    # Graph generation, job registry, pipeline execution
+│
+├── app/
+│   ├── src/
+│   │   ├── components/            # React console panels
+│   │   ├── hooks/                 # React Query pipeline hooks
+│   │   ├── lib/api.ts             # API client and Vite proxy usage
+│   │   ├── stores/                # Zustand pipeline state
+│   │   ├── types.ts               # TypeScript domain types
+│   │   └── styles.css             # Tailwind and modern slider styling
+│   ├── package.json
+│   └── vite.config.ts             # Dev proxy for /api
+│
+├── quantum_hybrid/                # SDP and hybrid rounding core
+├── quantum_pulser/                # Pulser-style pulse and proxy utilities
+├── frontend/                      # Legacy static dashboard
+├── scripts/                       # Experiment runners
+├── assets/software-preview.png    # README preview image
+├── docker-compose.yml             # API + app stack
+├── quantum_main.py                # Research runner
+├── quantum_utils.py               # Hamiltonians, Pauli operators, exact utilities
+└── requirements.txt               # Python dependencies
 ```
 
 ## Run With Docker
+
+Docker is the easiest way to launch both services together.
 
 ```bash
 docker compose up
 ```
 
-Then open:
+Open:
 
 ```text
 http://localhost:5173
 ```
 
-The API is available at:
+Services:
 
 ```text
-http://localhost:8000
+Frontend: http://localhost:5173
+API:      http://localhost:8000
+Docs:     http://localhost:8000/docs
+Health:   http://localhost:8000/api/health
+```
+
+Stop:
+
+```bash
+docker compose down
 ```
 
 ## Run Without Docker
 
-Backend:
+Use this mode when Docker is not installed.
+
+### Backend
 
 ```bash
+cd quantum-maxcut-lab
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 python -m uvicorn api.main:app --reload --port 8000
 ```
 
-Frontend:
+### Frontend
+
+Open a second terminal:
 
 ```bash
-cd app
+cd quantum-maxcut-lab/app
 npm install
 npm run dev
 ```
@@ -106,9 +164,28 @@ Open:
 http://localhost:5173
 ```
 
+If port `5173` is already used, Vite may choose `5174` or another port. The backend now allows local development ports dynamically, and the frontend proxies `/api` requests to the configured backend.
+
+## Run With A Custom API Port
+
+If port `8000` is busy:
+
+```bash
+python -m uvicorn api.main:app --host 127.0.0.1 --port 8001
+```
+
+Then start the frontend with:
+
+```bash
+cd app
+VITE_API_BASE_URL=http://127.0.0.1:8001 npm run dev
+```
+
+The frontend still calls `/api/...`; Vite forwards those calls to the configured backend target.
+
 ## Python-Only Dashboard
 
-If Docker and Node.js are not installed, run the lightweight dashboard:
+The repository also includes a lightweight dashboard that does not require Node.js.
 
 ```bash
 source .venv/bin/activate
@@ -121,29 +198,126 @@ Open:
 http://127.0.0.1:8765
 ```
 
+This dashboard is useful for inspecting existing experiment output files and plots. The React console in `app/` is the main software interface.
+
 ## API Endpoints
 
-- `POST /api/graph/generate` creates a weighted graph instance.
-- `POST /api/pipeline/run` starts the full Pulser to SDP to rounding pipeline.
-- `GET /api/pipeline/{job_id}/status` polls a running pipeline job.
-- `GET /api/results/{family}` reads available family-level experiment summaries.
+### Health
+
+```http
+GET /api/health
+```
+
+Response:
+
+```json
+{
+  "status": "ok"
+}
+```
+
+### Generate Graph
+
+```http
+POST /api/graph/generate
+```
+
+Example payload:
+
+```json
+{
+  "family": "cycle",
+  "n_nodes": 6,
+  "density": 0.6,
+  "weight_min": 0.5,
+  "weight_max": 1.5,
+  "seed": 42,
+  "optimize_geometry": true
+}
+```
+
+The response contains weighted edges, node positions, optional mapping error and graph descriptors.
+
+### Run Pipeline
+
+```http
+POST /api/pipeline/run
+```
+
+Example payload:
+
+```json
+{
+  "graph": {
+    "family": "cycle",
+    "n_nodes": 6,
+    "edges": [
+      { "i": 0, "j": 1, "w": 1.2 }
+    ],
+    "positions": [
+      { "id": 0, "x": 0.0, "y": 1.0 }
+    ],
+    "mapping_error": 0.00002,
+    "descriptors": {}
+  },
+  "annealing": {
+    "omega_peak_mhz": 2.0,
+    "rise_duration": 1000,
+    "hold_duration": 1000,
+    "fall_duration": 26000,
+    "delta_start_pi": 1.0,
+    "delta_hold_pi": -0.5,
+    "delta_end_pi": -1.0,
+    "sampling_rate": 0.05,
+    "n_roundings": 32
+  },
+  "n_roundings": 32,
+  "seed": 1234
+}
+```
+
+The endpoint returns a job id immediately. The computation runs in the background.
+
+### Poll Pipeline Status
+
+```http
+GET /api/pipeline/{job_id}/status
+```
+
+The response includes:
+
+- job status: `queued`, `running`, `completed` or `failed`;
+- progress percentage;
+- step metrics;
+- final result payload once completed;
+- error text if the run fails.
+
+### Family Results
+
+```http
+GET /api/results/{family}
+```
+
+Reads available graph-family summary files when they exist.
 
 ## Research Core
 
-The main quantum objective is the Quantum MaxCut Hamiltonian:
+The main target Hamiltonian is the Quantum MaxCut Hamiltonian:
 
 ```math
-H_{\mathrm{qmc}} = - \sum_{(i,j)\in E} w_{ij} \left(I - X_i X_j - Y_i Y_j - Z_i Z_j\right)
+H_{\mathrm{qmc}} = - \sum_{(i,j)\in E} w_{ij}
+\left(I - X_i X_j - Y_i Y_j - Z_i Z_j\right)
 ```
 
 The neutral-atom proxy uses distance-dependent XY couplings:
 
 ```math
-H_r = \sum_{(i,j)\in E} J_{ij} \left(X_i X_j + Y_i Y_j\right),
+H_r = \sum_{(i,j)\in E} J_{ij}
+\left(X_i X_j + Y_i Y_j\right),
 \qquad J_{ij} = \frac{C_3}{r_{ij}^3}
 ```
 
-The software measures the geometry mismatch:
+The geometry optimization minimizes the mismatch between graph weights and Rydberg couplings:
 
 ```math
 f(\mathbf r) =
@@ -156,7 +330,108 @@ f(\mathbf r) =
 }
 ```
 
-and compares proxy/hybrid quality through energy and MaxCut-style metrics.
+The hybrid layer uses proxy correlators to construct an SDP relaxation over pseudo-moment variables, then applies rounding to recover MaxCut-style candidate assignments.
+
+## Troubleshooting
+
+### `Failed to fetch` when clicking `Generate graph`
+
+This usually means the browser cannot reach the API, or CORS/proxy configuration is wrong.
+
+Check the backend:
+
+```bash
+curl http://127.0.0.1:8000/api/health
+```
+
+If the backend is running on `8001`, start the frontend with:
+
+```bash
+VITE_API_BASE_URL=http://127.0.0.1:8001 npm run dev
+```
+
+If Vite starts on `5174` instead of `5173`, that is fine. The API allows local ports and the Vite proxy forwards `/api` correctly.
+
+### `npm: command not found`
+
+Install Node.js LTS:
+
+```bash
+brew install node
+```
+
+or install it from:
+
+```text
+https://nodejs.org/
+```
+
+### `docker: command not found`
+
+Install Docker Desktop for Mac:
+
+```text
+https://www.docker.com/products/docker-desktop/
+```
+
+Then restart the terminal.
+
+### `python: command not found`
+
+Use:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+```
+
+### Port already in use
+
+Use another API port:
+
+```bash
+python -m uvicorn api.main:app --port 8001
+```
+
+and point Vite to it:
+
+```bash
+VITE_API_BASE_URL=http://127.0.0.1:8001 npm run dev
+```
+
+## Validation
+
+Frontend build:
+
+```bash
+cd app
+npm run build
+```
+
+Backend import/compile check:
+
+```bash
+PYTHONPYCACHEPREFIX=/tmp/quantum-maxcut-pycache python3 -m compileall api
+```
+
+Quick graph-generation check through the Vite proxy:
+
+```bash
+curl -X POST http://localhost:5173/api/graph/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "family": "cycle",
+    "n_nodes": 6,
+    "density": 0.6,
+    "weight_min": 0.5,
+    "weight_max": 1.5,
+    "seed": 42,
+    "optimize_geometry": true
+  }'
+```
+
+If Vite is running on `5174`, replace `5173` by `5174`.
 
 ## Experiment Scripts
 
@@ -173,9 +448,18 @@ Run the graph-family hybrid pipeline:
 python scripts/run_graph_family_full_pipeline.py --n 4 --num-instances 100 --seed 123
 ```
 
-## Why This Repository Exists
+## Relationship To The Original Project
 
-The original repository documents the research pipeline in detail. This repository is positioned as the software showcase version: cleaner packaging, a stronger README, an application-first presentation, and a visible product preview for GitHub visitors.
+This repository is the software-console version of the research system described in [`karimelhoudaigui/quantum-maxcut`](https://github.com/karimelhoudaigui/quantum-maxcut).
+
+It keeps the same scientific direction while emphasizing:
+
+- a visible application surface;
+- reproducible local launch commands;
+- a clean GitHub presentation;
+- dynamic annealing controls;
+- API-driven workflow execution;
+- software-style architecture for demos and review.
 
 ## License
 
