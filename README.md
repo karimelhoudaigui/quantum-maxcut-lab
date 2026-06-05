@@ -20,6 +20,18 @@ The original project focuses on the mathematical and experimental pipeline. This
 
 The application is designed for small neutral-atom MaxCut experiments where exact simulation, optimization and SDP are still tractable. It gives researchers and reviewers a single interface to move from a graph instance to a full Pulser → SDP → rounding comparison.
 
+## Software In Action
+
+The console is designed as a research cockpit: graph construction, annealing design, pipeline execution and metrics remain visible in the same workspace. The left rail controls the experiment, the center column shows the live pipeline and geometry, and the right rail keeps the current result metrics available while the user iterates.
+
+![Quantum MaxCut Lab console with generated 3D graph and annealing schedule](assets/screenshot-console-3d-graph.png)
+
+The generated graph is rendered as an interactive Three.js scene. The view keeps the optimized atom layout readable while adding depth, labels and weighted links so the user can rotate, zoom and inspect the instance before running the quantum/hybrid pipeline.
+
+![Annealing schedule visualization showing amplitude and detuning evolution](assets/screenshot-annealing-schedule.png)
+
+The annealing visual replaces the old empty structure table. It shows the pulse as a time-domain object: `rise`, `sweep` and `fall` phases are visible, while the two curves expose how the Rabi amplitude and detuning evolve under the current slider configuration.
+
 ## Core Workflow
 
 1. Select a graph family: `path`, `cycle`, `star`, `complete` or `random`.
@@ -73,6 +85,34 @@ delta_end = pi * delta_end_pi
 
 The final pipeline result stores the annealing configuration used for the run, making experiments reproducible from the UI state.
 
+The schedule panel is intentionally more product-oriented than Pulser's default drawing output. It keeps the same physical meaning as a sequence built from ramp waveforms, but it is tuned for a software interface: high contrast, phase bands, hover probe values and live updates as the sliders move.
+
+Conceptually, the displayed schedule corresponds to the familiar Pulser pattern:
+
+```python
+rise = pulser.Pulse.ConstantDetuning(
+    pulser.RampWaveform(t_rise, 0.0, Omega_max),
+    delta_0,
+    0.0,
+)
+sweep = pulser.Pulse.ConstantAmplitude(
+    Omega_max,
+    pulser.RampWaveform(t_sweep, delta_0, delta_f),
+    0.0,
+)
+fall = pulser.Pulse.ConstantDetuning(
+    pulser.RampWaveform(t_fall, Omega_max, 0.0),
+    delta_f,
+    0.0,
+)
+```
+
+In the UI, this becomes a continuous visual timeline:
+
+- `Rise`: amplitude ramps from `0` to `Omega_max` while detuning is held at the initial value.
+- `Sweep`: amplitude stays constant while detuning moves from `delta_0` to `delta_f`.
+- `Fall`: amplitude ramps back to `0` while the final detuning is held.
+
 ## 3D Graph Canvas
 
 The graph view is an interactive Three.js scene. Generated graph nodes are rendered as glowing 3D spheres, weighted edges are rendered as luminous links and labels stay attached to the nodes.
@@ -117,6 +157,8 @@ The 3D projection keeps the optimized atom layout as the base geometry and adds 
 ├── frontend/                      # Legacy static dashboard
 ├── scripts/                       # Experiment runners
 ├── assets/software-preview.png    # README preview image
+├── assets/screenshot-console-3d-graph.png
+├── assets/screenshot-annealing-schedule.png
 ├── docker-compose.yml             # API + app stack
 ├── quantum_main.py                # Research runner
 ├── quantum_utils.py               # Hamiltonians, Pauli operators, exact utilities
