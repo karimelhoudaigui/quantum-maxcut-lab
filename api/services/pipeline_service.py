@@ -225,6 +225,7 @@ def _run_pipeline_job(job_id: str, request: PipelineRunRequest) -> None:
             seed=request.seed,
             max_iter=500,
             tol=1e-5,
+            proxy_hamiltonian=request.proxy_hamiltonian.value,
             **pulse,
         )
 
@@ -239,6 +240,7 @@ def _run_pipeline_job(job_id: str, request: PipelineRunRequest) -> None:
             "gain_hybrid_vs_pulser": gain,
             "cut_value": float(result["E_hybrid_in_qmc"]),
             "annealing": request.annealing.model_dump(),
+            "proxy_hamiltonian": request.proxy_hamiltonian.value,
         }
         registry.update(job_id, status="completed", progress=100, result=result_payload)
     except Exception as exc:

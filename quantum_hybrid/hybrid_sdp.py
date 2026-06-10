@@ -1,5 +1,7 @@
 import numpy as np
 
+from proxy_hamiltonians import DEFAULT_PROXY_HAMILTONIAN, proxy_metadata
+
 try:
     import cvxpy as cp
 except ImportError:
@@ -85,7 +87,12 @@ def build_edge_correlation_dict(corrs):
     }
 
 
-def solve_proxy_sdp_from_correlators(n, corrs, target_edges):
+def solve_proxy_sdp_from_correlators(
+    n,
+    corrs,
+    target_edges,
+    proxy_hamiltonian=DEFAULT_PROXY_HAMILTONIAN,
+):
     """
     V2 :
     construit une pseudo-moment matrix Delta de taille (2n+1) x (2n+1)
@@ -102,10 +109,15 @@ def solve_proxy_sdp_from_correlators(n, corrs, target_edges):
 
     Cette version reste volontairement simple : elle n'impose pas encore les
     relations algébriques plus fines entre opérateurs.
+
+    Important : la formulation reste la relaxation historique XX/YY. Les
+    autres Hamiltoniens proxy peuvent fournir des corrélateurs additionnels
+    (notamment ZZ), mais ceux-ci ne changent pas encore l'objectif SDP.
     """
     if cp is None:
         raise ImportError("cvxpy n'est pas installé. Installe-le pour utiliser l'étape SDP.")
 
+    proxy_info = proxy_metadata(proxy_hamiltonian)
     corr_dict = build_edge_correlation_dict(corrs)
     xx = corr_dict["xx"]
     yy = corr_dict["yy"]
@@ -147,6 +159,10 @@ def solve_proxy_sdp_from_correlators(n, corrs, target_edges):
         "objective_value": problem.value,
         "operator_index": index,
         "correlators": corr_dict,
+        "proxy_hamiltonian": proxy_info["proxy_hamiltonian"],
+        "proxy_required_correlators": proxy_info["proxy_required_correlators"],
+        "proxy_sdp_note": proxy_info["proxy_sdp_note"],
+        "sdp_formulation": "legacy_xy",
     }
 
 

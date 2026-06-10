@@ -18,6 +18,7 @@ export function usePipelineRunner() {
   const graph = usePipelineStore((state) => state.graph);
   const job = usePipelineStore((state) => state.job);
   const annealing = usePipelineStore((state) => state.annealing);
+  const proxyHamiltonian = usePipelineStore((state) => state.proxyHamiltonian);
   const setJob = usePipelineStore((state) => state.setJob);
 
   const run = useMutation({
@@ -25,7 +26,7 @@ export function usePipelineRunner() {
       if (!graph) {
         throw new Error("Generate a graph before running the pipeline.");
       }
-      return runPipeline(graph, annealing);
+      return runPipeline(graph, annealing, proxyHamiltonian);
     },
     onSuccess: setJob,
   });

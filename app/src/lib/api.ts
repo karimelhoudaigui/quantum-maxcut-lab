@@ -4,6 +4,7 @@ import type {
   GraphGenerateRequest,
   GraphResponse,
   PipelineJob,
+  ProxyHamiltonianName,
 } from "../types";
 
 const API_BASE = import.meta.env.DEV ? "" : import.meta.env.VITE_API_BASE_URL ?? "";
@@ -32,12 +33,17 @@ export function generateGraph(payload: GraphGenerateRequest): Promise<GraphRespo
   });
 }
 
-export function runPipeline(graph: GraphResponse, annealing: AnnealingConfig): Promise<PipelineJob> {
+export function runPipeline(
+  graph: GraphResponse,
+  annealing: AnnealingConfig,
+  proxyHamiltonian: ProxyHamiltonianName,
+): Promise<PipelineJob> {
   return request<PipelineJob>("/api/pipeline/run", {
     method: "POST",
     body: JSON.stringify({
       graph,
       annealing,
+      proxy_hamiltonian: proxyHamiltonian,
       n_roundings: annealing.n_roundings,
       seed: 1234,
     }),

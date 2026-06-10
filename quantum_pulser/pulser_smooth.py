@@ -4,6 +4,12 @@ from pulser import Pulse, Sequence
 from pulser.devices import MockDevice
 from pulser.waveforms import CustomWaveform
 
+from proxy_hamiltonians import (
+    DEFAULT_PROXY_HAMILTONIAN,
+    build_proxy_hamiltonian,
+    normalize_proxy_hamiltonian,
+    proxy_metadata,
+)
 from quantum_utils import build_qmc_hamiltonian, build_xy_hamiltonian, couplings_from_positions, ground_state
 
 from .pulser_core import (
@@ -80,30 +86,45 @@ def evaluate_smooth_pulser_final_state(
     delta_end,
     sampling_rate=0.05,
     scale=15.5,
+    proxy_hamiltonian=DEFAULT_PROXY_HAMILTONIAN,
 ):
+    proxy_name = normalize_proxy_hamiltonian(proxy_hamiltonian)
     H_qmc = build_qmc_hamiltonian(n, target_edges)
     E0_qmc, psi_qmc = ground_state(H_qmc)
 
     couplings = couplings_from_positions(positions, c3=1.0)
-    H_r = build_xy_hamiltonian(n, couplings)
+    H_r = build_proxy_hamiltonian(
+        n=n,
+        target_edges=target_edges,
+        proxy_hamiltonian=proxy_name,
+        couplings=couplings,
+    )
     E0_r, psi_r = ground_state(H_r)
 
-    seq = build_xy_smooth_sequence(
-        positions=positions,
-        omega_prep=omega_prep,
-        prep_duration=prep_duration,
-        omega_peak=omega_peak,
-        rise_duration=rise_duration,
-        hold_duration=hold_duration,
-        fall_duration=fall_duration,
-        delta_start=delta_start,
-        delta_hold=delta_hold,
-        delta_end=delta_end,
-        scale=scale,
-    )
+    if proxy_name == DEFAULT_PROXY_HAMILTONIAN:
+        seq = build_xy_smooth_sequence(
+            positions=positions,
+            omega_prep=omega_prep,
+            prep_duration=prep_duration,
+            omega_peak=omega_peak,
+            rise_duration=rise_duration,
+            hold_duration=hold_duration,
+            fall_duration=fall_duration,
+            delta_start=delta_start,
+            delta_hold=delta_hold,
+            delta_end=delta_end,
+            scale=scale,
+        )
 
-    result = run_pulser_sequence(seq, sampling_rate=sampling_rate)
-    psi_T = extract_final_statevector_from_result(result)
+        result = run_pulser_sequence(seq, sampling_rate=sampling_rate)
+        psi_T = extract_final_statevector_from_result(result)
+        preparation_mode = "pulser_sequence"
+    else:
+        seq = None
+        result = None
+        psi_T = psi_r
+        preparation_mode = "exact_proxy_ground_state"
+
     rho_T = statevector_to_density(psi_T)
 
     E_proxy_exact_in_qmc = expectation_value(statevector_to_density(psi_r), H_qmc)
@@ -129,6 +150,8 @@ def evaluate_smooth_pulser_final_state(
         "ratio_proxy_exact": ratio_proxy_exact,
         "ratio_pulser": ratio_pulser,
         "overlap_proxy": overlap_proxy,
+        "preparation_mode": preparation_mode,
+        **proxy_metadata(proxy_name),
     }
 
 

@@ -112,6 +112,7 @@ def evaluate_fixed_hybrid_sequence_on_graph(
     seed=1234,
     max_iter=500,
     tol=1e-5,
+    proxy_hamiltonian="rydberg_xy",
 ):
     positions, couplings, mapping_error = optimize_atom_positions(
         target_edges,
@@ -135,6 +136,7 @@ def evaluate_fixed_hybrid_sequence_on_graph(
         delta_end=delta_end,
         sampling_rate=sampling_rate,
         scale=scale,
+        proxy_hamiltonian=proxy_hamiltonian,
     )
 
     corrs = compute_edge_correlators(pulser_out["rho_T"], n, target_edges)
@@ -146,6 +148,7 @@ def evaluate_fixed_hybrid_sequence_on_graph(
         corrs=corrs,
         seed=seed,
         n_roundings=n_roundings,
+        proxy_hamiltonian=proxy_hamiltonian,
     )
 
     return {
@@ -168,6 +171,13 @@ def evaluate_fixed_hybrid_sequence_on_graph(
         "E_pulser_in_qmc": float(pulser_out["E_pulser_in_qmc"]),
         "E_product_best_in_qmc": float(hybrid_out["E_product_in_qmc"]),
         "E_hybrid_in_qmc": float(hybrid_out["E_hybrid_in_qmc"]),
+        "proxy_hamiltonian": str(pulser_out["proxy_hamiltonian"]),
+        "proxy_label": str(pulser_out["proxy_label"]),
+        "proxy_required_correlators": list(pulser_out["proxy_required_correlators"]),
+        "proxy_experimental": bool(pulser_out["proxy_experimental"]),
+        "proxy_sdp_note": str(hybrid_out["proxy_sdp_note"]),
+        "sdp_formulation": str(hybrid_out["sdp_formulation"]),
+        "preparation_mode": str(pulser_out["preparation_mode"]),
     }
 
 
@@ -194,6 +204,7 @@ def study_fixed_hybrid_sequence_on_random_graphs(
     n_instances=None,
     n_graphs=None,
     require_connected=True,
+    proxy_hamiltonian="rydberg_xy",
 ):
     if n < 1:
         raise ValueError("n doit être un entier strictement positif.")
@@ -240,6 +251,7 @@ def study_fixed_hybrid_sequence_on_random_graphs(
             seed=seed + instance,
             max_iter=max_iter,
             tol=tol,
+            proxy_hamiltonian=proxy_hamiltonian,
         )
 
         result["graph_id"] = int(instance)
@@ -251,6 +263,7 @@ def study_fixed_hybrid_sequence_on_random_graphs(
         print(f"Ratio Product best = {result['ratio_product_best']:.6f}")
         print(f"Ratio Hybrid       = {result['ratio_hybrid']:.6f}")
         print(f"Winner             = {result['winner']}")
+        print(f"Proxy Hamiltonian  = {result['proxy_hamiltonian']}")
 
     ratios_pulser = np.array([r["ratio_pulser"] for r in all_results], dtype=float)
     ratios_product = np.array([r["ratio_product_best"] for r in all_results], dtype=float)

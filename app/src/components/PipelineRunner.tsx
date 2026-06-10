@@ -7,6 +7,7 @@ import type { PipelineStep } from "../types";
 export function PipelineRunner() {
   const graph = usePipelineStore((state) => state.graph);
   const job = usePipelineStore((state) => state.job);
+  const proxyHamiltonian = usePipelineStore((state) => state.proxyHamiltonian);
   const { run } = usePipelineRunner();
   const steps = job?.steps ?? [];
 
@@ -16,6 +17,7 @@ export function PipelineRunner() {
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/60">Pipeline</h2>
           <p className="text-xl font-semibold">Pulser → SDP → Rounding</p>
+          <p className="mt-1 text-xs text-foreground/50">Proxy Hamiltonian: {proxyLabel(proxyHamiltonian)}</p>
         </div>
         <button
           type="button"
@@ -43,6 +45,14 @@ export function PipelineRunner() {
       ) : null}
     </section>
   );
+}
+
+function proxyLabel(value: string) {
+  return {
+    rydberg_xy: "Rydberg XY",
+    ising_zz: "Ising ZZ experimental",
+    heisenberg_qmc: "Heisenberg QMC-like experimental",
+  }[value] ?? value;
 }
 
 const emptySteps: PipelineStep[] = [

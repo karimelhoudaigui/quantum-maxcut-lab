@@ -1,4 +1,5 @@
 export type GraphFamily = "path" | "cycle" | "star" | "complete" | "random";
+export type ProxyHamiltonianName = "rydberg_xy" | "ising_zz" | "heisenberg_qmc";
 
 export interface Edge {
   i: number;
@@ -46,6 +47,7 @@ export interface AnnealingConfig {
 export interface PipelineRunRequest {
   graph: GraphResponse;
   annealing: AnnealingConfig;
+  proxy_hamiltonian: ProxyHamiltonianName;
   n_roundings: number;
   seed: number;
 }

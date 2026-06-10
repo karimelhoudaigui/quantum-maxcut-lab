@@ -44,6 +44,7 @@ Thumbs.db
 # Frontend dependencies
 node_modules/
 app/node_modules/
+*.tsbuildinfo
 
 # Generated research outputs
 results/

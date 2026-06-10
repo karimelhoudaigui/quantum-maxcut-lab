@@ -98,6 +98,7 @@ def run_hybrid_postprocessing(
     E_pulser_in_qmc,
     seed=1234,
     n_roundings=32,
+    proxy_hamiltonian="rydberg_xy",
 ):
     """
     Pipeline complet :
@@ -115,6 +116,7 @@ def run_hybrid_postprocessing(
         n=n,
         corrs=corrs,
         target_edges=target_edges,
+        proxy_hamiltonian=proxy_hamiltonian,
     )
     Delta = sdp_out["Delta"]
 
@@ -147,6 +149,10 @@ def run_hybrid_postprocessing(
         "C": sdp_out["C"],
         "operator_index": sdp_out.get("operator_index"),
         "correlators": sdp_out.get("correlators"),
+        "proxy_hamiltonian": sdp_out.get("proxy_hamiltonian"),
+        "proxy_required_correlators": sdp_out.get("proxy_required_correlators"),
+        "proxy_sdp_note": sdp_out.get("proxy_sdp_note"),
+        "sdp_formulation": sdp_out.get("sdp_formulation"),
         "rho_product": best_rounding["rho_product"],
         "bloch_vectors": best_rounding["bloch_vectors"],
         "u_x": best_rounding["u_x"],
@@ -173,6 +179,7 @@ def run_hybrid_on_pulser_output(
     corrs,
     seed=1234,
     n_roundings=32,
+    proxy_hamiltonian="rydberg_xy",
 ):
     """
     Wrapper pratique quand evaluate_smooth_pulser_final_state a déjà tourné.
@@ -185,4 +192,5 @@ def run_hybrid_on_pulser_output(
         E_pulser_in_qmc=float(pulser_out["E_pulser_in_qmc"]),
         seed=seed,
         n_roundings=n_roundings,
+        proxy_hamiltonian=proxy_hamiltonian,
     )

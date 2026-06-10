@@ -14,6 +14,12 @@ class GraphFamily(str, Enum):
     random = "random"
 
 
+class ProxyHamiltonianName(str, Enum):
+    rydberg_xy = "rydberg_xy"
+    ising_zz = "ising_zz"
+    heisenberg_qmc = "heisenberg_qmc"
+
+
 class Edge(BaseModel):
     i: int
     j: int
@@ -60,6 +66,7 @@ class AnnealingConfig(BaseModel):
 class PipelineRunRequest(BaseModel):
     graph: GraphResponse
     annealing: AnnealingConfig = Field(default_factory=AnnealingConfig)
+    proxy_hamiltonian: ProxyHamiltonianName = ProxyHamiltonianName.rydberg_xy
     n_roundings: int = Field(default=32, ge=1, le=256)
     seed: int = 1234
 

@@ -4,6 +4,7 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recha
 import { usePipelineStore } from "../stores/pipelineStore";
 
 const metricKeys = [
+  ["proxy_hamiltonian", "Proxy"],
   ["ratio_proxy_exact", "Ratio Proxy"],
   ["cut_value", "Cut Value"],
   ["mapping_error", "Mapping Error"],
@@ -61,7 +62,7 @@ export function ResultsDashboard() {
 }
 
 function MetricCard({ label, value }: { label: string; value: unknown }) {
-  const display = typeof value === "number" ? value.toFixed(5) : "—";
+  const display = typeof value === "number" ? value.toFixed(5) : typeof value === "string" ? value : "—";
   return (
     <article className="rounded-md border border-border bg-background/70 p-3">
       <p className="text-xs text-foreground/55">{label}</p>

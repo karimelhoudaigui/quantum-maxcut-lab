@@ -3,15 +3,22 @@ import type { CSSProperties, ReactNode } from "react";
 
 import { useGraphGeneration } from "../hooks/usePipeline";
 import { usePipelineStore } from "../stores/pipelineStore";
-import type { GraphFamily } from "../types";
+import type { GraphFamily, ProxyHamiltonianName } from "../types";
 
 const families: GraphFamily[] = ["path", "cycle", "star", "complete", "random"];
+const proxyOptions: Array<{ value: ProxyHamiltonianName; label: string; hint: string }> = [
+  { value: "rydberg_xy", label: "Rydberg XY", hint: "stable default" },
+  { value: "ising_zz", label: "Ising ZZ", hint: "experimental" },
+  { value: "heisenberg_qmc", label: "Heisenberg QMC-like", hint: "experimental" },
+];
 
 export function GraphConfigurator() {
   const config = usePipelineStore((state) => state.config);
   const annealing = usePipelineStore((state) => state.annealing);
+  const proxyHamiltonian = usePipelineStore((state) => state.proxyHamiltonian);
   const setConfig = usePipelineStore((state) => state.setConfig);
   const setAnnealing = usePipelineStore((state) => state.setAnnealing);
+  const setProxyHamiltonian = usePipelineStore((state) => state.setProxyHamiltonian);
   const generation = useGraphGeneration();
 
   return (
@@ -84,6 +91,24 @@ export function GraphConfigurator() {
             onChange={(event) => setConfig({ optimize_geometry: event.target.checked })}
             className="h-4 w-4 accent-primary"
           />
+        </label>
+
+        <label className="block rounded-md border border-border bg-background/70 p-3">
+          <span className="text-sm font-medium text-foreground/80">Proxy Hamiltonian</span>
+          <select
+            value={proxyHamiltonian}
+            onChange={(event) => setProxyHamiltonian(event.target.value as ProxyHamiltonianName)}
+            className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+          >
+            {proxyOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} - {option.hint}
+              </option>
+            ))}
+          </select>
+          <p className="mt-2 text-xs leading-relaxed text-foreground/50">
+            Rydberg XY preserves the current pipeline. Ising ZZ and Heisenberg QMC-like are experimental proxy-state modes.
+          </p>
         </label>
 
         <div className="rounded-md border border-border bg-background/55 p-3">

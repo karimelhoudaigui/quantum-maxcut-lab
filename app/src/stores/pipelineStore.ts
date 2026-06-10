@@ -1,14 +1,16 @@
 import { create } from "zustand";
 
-import type { AnnealingConfig, GraphGenerateRequest, GraphResponse, PipelineJob } from "../types";
+import type { AnnealingConfig, GraphGenerateRequest, GraphResponse, PipelineJob, ProxyHamiltonianName } from "../types";
 
 interface PipelineState {
   config: GraphGenerateRequest;
   annealing: AnnealingConfig;
+  proxyHamiltonian: ProxyHamiltonianName;
   graph: GraphResponse | null;
   job: PipelineJob | null;
   setConfig: (config: Partial<GraphGenerateRequest>) => void;
   setAnnealing: (annealing: Partial<AnnealingConfig>) => void;
+  setProxyHamiltonian: (proxyHamiltonian: ProxyHamiltonianName) => void;
   setGraph: (graph: GraphResponse) => void;
   setJob: (job: PipelineJob | null) => void;
 }
@@ -34,10 +36,12 @@ export const usePipelineStore = create<PipelineState>((set) => ({
     sampling_rate: 0.05,
     n_roundings: 32,
   },
+  proxyHamiltonian: "rydberg_xy",
   graph: null,
   job: null,
   setConfig: (config) => set((state) => ({ config: { ...state.config, ...config } })),
   setAnnealing: (annealing) => set((state) => ({ annealing: { ...state.annealing, ...annealing } })),
+  setProxyHamiltonian: (proxyHamiltonian) => set({ proxyHamiltonian }),
   setGraph: (graph) => set({ graph }),
   setJob: (job) => set({ job }),
 }));

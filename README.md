@@ -49,7 +49,8 @@ The annealing visual replaces the old empty structure table. It shows the pulse 
 - **3D graph canvas** powered by Three.js, with orbit, zoom and pan controls.
 - **Atom geometry optimization** to map graph weights into distance-dependent neutral-atom couplings.
 - **Dynamic annealing control** through sliders for pulse amplitude, durations, detuning sweep and sampling.
-- **Pulser-style quantum proxy evaluation** for Rydberg-inspired XY dynamics.
+- **Configurable proxy Hamiltonians** with Rydberg XY as the stable default and experimental Ising/Heisenberg modes.
+- **Pulser-style quantum proxy evaluation** for the default Rydberg-inspired XY dynamics.
 - **SDP reconstruction** using proxy correlators.
 - **Hybrid rounding** to compare rounded MaxCut candidates against proxy behavior.
 - **Live pipeline status** with queued, running, completed and failed states.
@@ -128,6 +129,41 @@ Controls:
 
 The 3D projection keeps the optimized atom layout as the base geometry and adds depth from graph structure, so high-connectivity nodes become easier to inspect. This makes the graph easier to explore during demos and while comparing geometry embedding quality against downstream Pulser/hybrid metrics.
 
+## Configurable Proxy Hamiltonians
+
+Quantum MaxCut Lab evaluates every final candidate against the same target objective: the Quantum MaxCut Hamiltonian. The configurable proxy feature only changes the Hamiltonian used to prepare or simulate the intermediate proxy state before correlators, SDP and rounding.
+
+The default remains unchanged:
+
+```text
+proxy_hamiltonian = "rydberg_xy"
+```
+
+If no proxy is provided, the software follows the original Rydberg/XY pipeline.
+
+| Proxy | Hamiltonian | Status | Correlators computed | SDP behavior |
+| --- | --- | --- | --- | --- |
+| `rydberg_xy` | `sum J_ij (XX + YY)` | Stable default | `XX`, `YY`, `ZZ` | Legacy SDP uses `XX/YY` as before |
+| `ising_zz` | `sum w_ij ZZ` | Experimental | `XX`, `YY`, `ZZ`; proxy requires `ZZ` | Current SDP still uses legacy `XX/YY`; `ZZ` is reported but not yet integrated |
+| `heisenberg_qmc` | `-sum w_ij (I - XX - YY - ZZ)` | Experimental | `XX`, `YY`, `ZZ` | Current SDP still uses legacy `XX/YY`; target-like SDP extension is future work |
+
+The important design rule is backward compatibility. The current Rydberg/XY mode still builds and simulates the Pulser smooth sequence exactly as before. The experimental modes use the exact ground state of the selected proxy as the prepared proxy state; this keeps the feature useful for comparing correlators and downstream behavior without pretending that the existing Pulser sequence directly implements every proxy.
+
+The result payload includes:
+
+```json
+{
+  "proxy_hamiltonian": "rydberg_xy",
+  "proxy_label": "Rydberg XY",
+  "proxy_required_correlators": ["xx", "yy"],
+  "proxy_experimental": false,
+  "sdp_formulation": "legacy_xy",
+  "proxy_sdp_note": "Stable default. The existing SDP relaxation is built for XX/YY proxy correlators."
+}
+```
+
+Use the experimental modes as diagnostics, not as final mathematical claims about a new SDP formulation. Extending the SDP to natively constrain `ZZ` or full `XX/YY/ZZ` pseudo-moments should be done as a separate mathematical change.
+
 ## Architecture
 
 ```text
@@ -154,6 +190,7 @@ The 3D projection keeps the optimized atom layout as the base geometry and adds 
 │
 ├── quantum_hybrid/                # SDP and hybrid rounding core
 ├── quantum_pulser/                # Pulser-style pulse and proxy utilities
+├── proxy_hamiltonians.py          # Configurable proxy Hamiltonian registry
 ├── frontend/                      # Legacy static dashboard
 ├── scripts/                       # Experiment runners
 ├── assets/software-preview.png    # README preview image
@@ -331,6 +368,7 @@ Example payload:
     "sampling_rate": 0.05,
     "n_roundings": 32
   },
+  "proxy_hamiltonian": "rydberg_xy",
   "n_roundings": 32,
   "seed": 1234
 }
